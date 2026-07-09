@@ -12,7 +12,7 @@ Es el punto de inicio del programa. Muestra el menu, lee los datos con `Scanner`
 
 ## `GestorFinanzas`
 
-Es la clase controladora del sistema. Une las entidades financieras con las estructuras de datos. Por ejemplo, cuando registras un gasto, lo guarda en `ListaArreglo`, lo inserta en el ABB, lo inserta en el AVL, actualiza la matriz mensual y guarda una accion en la pila.
+Es la clase controladora del sistema. Une las entidades financieras con las estructuras de datos. Por ejemplo, cuando registras un gasto, lo guarda en `ListaArreglo`, lo agrega a una lista enlazada para ordenarlo por monto, lo inserta en el ABB, actualiza la matriz mensual y guarda una accion en la pila.
 
 ## `Transaccion`
 
@@ -40,11 +40,11 @@ Es una lista doblemente enlazada. Cada nodo conoce al anterior y al siguiente. E
 
 ## `ListaCircular`
 
-Es una lista circular. El ultimo nodo apunta nuevamente al primero. En el sistema se usa para mostrar consejos financieros por turnos.
+Es una lista circular. El ultimo nodo apunta nuevamente al primero. La implementacion queda disponible como tema adicional del curso, pero no forma parte del flujo principal del sistema financiero.
 
 ## `PilaArreglo`
 
-Es una pila implementada con arreglo. Implementa `InterfazPila`, por eso debe tener `apilar`, `desapilar`, `verCima` y `estaVacia`. En el sistema funciona como una pila de auditoria tecnica.
+Es una pila implementada con arreglo. Implementa `InterfazPila`, por eso debe tener `apilar`, `desapilar`, `verCima` y `estaVacia`. Queda disponible para comparar una pila basada en arreglo con una pila enlazada.
 
 ## `PilaEnlazada`
 
@@ -56,7 +56,7 @@ Es el contrato del TAD pila. Define que cualquier pila del proyecto debe saber a
 
 ## `ColaArreglo`
 
-Es una cola circular implementada con arreglo. Implementa `InterfazCola`, por eso debe tener `encolar`, `desencolar` y `estaVacia`. En el sistema guarda notificaciones.
+Es una cola circular implementada con arreglo. Implementa `InterfazCola`, por eso debe tener `encolar`, `desencolar` y `estaVacia`. Queda disponible como implementacion adicional de cola.
 
 ## `ColaEnlazada`
 
@@ -64,7 +64,7 @@ Es una cola dinamica implementada con nodos. Tambien implementa `InterfazCola`. 
 
 ## `ColaPrioridad`
 
-Es una cola con prioridad implementada usando `ListaArreglo`. Implementa `InterfazCola<TareaPrioridad>`. Inserta cada tarea en su posicion segun prioridad, para que al retirar salga primero la mas importante.
+Es una cola con prioridad implementada usando `ListaArreglo`. Implementa `InterfazCola<TareaPrioridad>`. Inserta cada tarea en su posicion segun prioridad, para que al retirar salga primero la mas importante. Es una estructura adicional que puede usarse si se desea ampliar el sistema con tareas financieras urgentes.
 
 ## `InterfazCola`
 
@@ -72,7 +72,7 @@ Es el contrato del TAD cola. Define que cualquier cola del proyecto debe saber e
 
 ## `MatrizDispersa`
 
-Es una matriz bidimensional. En el sistema guarda el resumen mensual de ingresos y gastos. Tambien demuestra transpuesta, matriz triangular inferior, matriz triangular superior, matriz tridiagonal y matriz simetrica/asimetrica.
+Es una matriz bidimensional. En el sistema guarda el resumen mensual de ingresos y gastos. Tambien conserva metodos de apoyo como transpuesta, matriz triangular inferior, matriz triangular superior, matriz tridiagonal y matriz simetrica/asimetrica para demostraciones academicas.
 
 ## `ArbolBusquedaTransacciones`
 
@@ -80,7 +80,7 @@ Es un arbol binario de busqueda por ID. Permite insertar movimientos, buscarlos 
 
 ## `ArbolAvlTransacciones`
 
-Es un arbol AVL ordenado por monto. Mantiene el arbol balanceado usando rotaciones izquierda y derecha despues de insertar o eliminar.
+Es un arbol AVL ordenado por monto. Mantiene el arbol balanceado usando rotaciones izquierda y derecha despues de insertar o eliminar. Queda como estructura adicional del curso; el sistema principal usa la lista enlazada para mostrar movimientos ordenados por monto.
 
 ## `Visitante`
 

@@ -36,30 +36,21 @@ public class Principal {
                     gestor.mostrarRecorridosArboles();
                     break;
                 case 8:
-                    gestor.mostrarDemoOperacionesArreglo();
+                    registrarPagoPendienteDesdeConsola(lector, gestor);
                     break;
                 case 9:
                     gestor.procesarGastoPendiente();
                     break;
                 case 10:
-                    gestor.mostrarTareaMasPrioritaria();
-                    break;
-                case 11:
-                    gestor.mostrarSiguienteNotificacion();
-                    break;
-                case 12:
                     gestor.mostrarUltimaAccion();
                     break;
-                case 13:
+                case 11:
                     gestor.listarCategoriasAdelante();
                     System.out.println("Recorrido inverso:");
                     gestor.listarCategoriasAtras();
                     break;
-                case 14:
-                    gestor.mostrarSiguienteConsejo();
-                    break;
-                case 15:
-                    gestor.mostrarDemoConceptosMatriz();
+                case 12:
+                    gestor.mostrarDemoOperacionesArreglo();
                     break;
                 case 0:
                     System.out.println("Fin del programa.");
@@ -82,14 +73,11 @@ public class Principal {
         System.out.println("5. Listar movimientos ordenados por monto (lista simple)");
         System.out.println("6. Ver matriz mensual ingresos/gastos");
         System.out.println("7. Ver recorridos de arboles");
-        System.out.println("8. Demo de copia, comparacion y fusion de arreglos");
+        System.out.println("8. Registrar pago pendiente (cola dinamica)");
         System.out.println("9. Procesar pago pendiente (cola dinamica)");
-        System.out.println("10. Atender tarea prioritaria (cola con prioridad)");
-        System.out.println("11. Leer notificacion (cola con arreglo)");
-        System.out.println("12. Ver ultima accion (pila dinamica)");
-        System.out.println("13. Ver categorias (lista doble)");
-        System.out.println("14. Ver consejo financiero (lista circular)");
-        System.out.println("15. Demo matriz triangular, tridiagonal y transpuesta");
+        System.out.println("10. Ver ultima accion (pila dinamica)");
+        System.out.println("11. Ver categorias (lista doble)");
+        System.out.println("12. Demo de copia, comparacion y fusion de arreglos");
         System.out.println("0. Salir");
     }
 
@@ -102,8 +90,27 @@ public class Principal {
         int mes = leerEntero(lector, "Mes (1-12): ");
         System.out.print("Descripcion: ");
         String descripcion = lector.nextLine();
-        gestor.registrarMovimiento(tipo, categoria, monto, mes, descripcion);
-        System.out.println("Movimiento registrado.");
+        try {
+            gestor.registrarMovimiento(tipo, categoria, monto, mes, descripcion);
+            System.out.println("Movimiento registrado.");
+        } catch (IllegalArgumentException error) {
+            System.out.println(error.getMessage());
+        }
+    }
+
+    private static void registrarPagoPendienteDesdeConsola(java.util.Scanner lector, GestorFinanzas gestor) {
+        System.out.print("Categoria: ");
+        String categoria = lector.nextLine();
+        double monto = leerDecimal(lector, "Monto: ");
+        int mes = leerEntero(lector, "Mes (1-12): ");
+        System.out.print("Descripcion: ");
+        String descripcion = lector.nextLine();
+        try {
+            gestor.encolarGastoPendiente(categoria, monto, mes, descripcion);
+            System.out.println("Pago pendiente registrado.");
+        } catch (IllegalArgumentException error) {
+            System.out.println(error.getMessage());
+        }
     }
 
     private static int leerEntero(java.util.Scanner lector, String mensaje) {
@@ -128,5 +135,3 @@ public class Principal {
         return valor;
     }
 }
-
-

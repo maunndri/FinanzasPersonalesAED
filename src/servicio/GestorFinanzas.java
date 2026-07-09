@@ -1,65 +1,47 @@
 package servicio;
 
 import estructuras.ListaArreglo;
-import estructuras.ListaCircular;
 import estructuras.ListaDobleEnlazada;
 import estructuras.ListaEnlazada;
-import estructuras.ColaPrioridad;
-import estructuras.ColaArreglo;
 import estructuras.ColaEnlazada;
-import estructuras.PilaArreglo;
 import estructuras.PilaEnlazada;
 import estructuras.Visitante;
 import estructuras.MatrizDispersa;
-import estructuras.ArbolAvlTransacciones;
 import estructuras.ArbolBusquedaTransacciones;
 import modelo.Categoria;
-import modelo.TareaPrioridad;
 import modelo.Transaccion;
 
 public class GestorFinanzas {
     private ListaArreglo<Transaccion> transacciones;
     private ListaEnlazada<Transaccion> transaccionesEnlazadas;
     private ListaDobleEnlazada<Categoria> categorias;
-    private ListaCircular<String> consejos;
     private PilaEnlazada<String> historialAcciones;
-    private PilaArreglo<String> pilaAuditoria;
     private ColaEnlazada<Transaccion> pagosPendientes;
-    private ColaArreglo<String> notificaciones;
-    private ColaPrioridad tareasPrioritarias;
     private MatrizDispersa matrizMensual;
     private ArbolBusquedaTransacciones abbPorId;
-    private ArbolAvlTransacciones avlPorMonto;
     private int siguienteId;
 
     public GestorFinanzas() {
         transacciones = new ListaArreglo<Transaccion>();
         transaccionesEnlazadas = new ListaEnlazada<Transaccion>();
         categorias = new ListaDobleEnlazada<Categoria>();
-        consejos = new ListaCircular<String>();
         historialAcciones = new PilaEnlazada<String>();
-        pilaAuditoria = new PilaArreglo<String>(5);
         pagosPendientes = new ColaEnlazada<Transaccion>();
-        notificaciones = new ColaArreglo<String>(5);
-        tareasPrioritarias = new ColaPrioridad();
         matrizMensual = new MatrizDispersa(12, 2);
         abbPorId = new ArbolBusquedaTransacciones();
-        avlPorMonto = new ArbolAvlTransacciones();
         siguienteId = 1;
         cargarDatosIniciales();
     }
 
     public void registrarMovimiento(String tipo, String categoria, double monto, int mes, String descripcion) {
+        validarMovimiento(tipo, monto, mes);
         Transaccion transaccion = new Transaccion(siguienteId, tipo, categoria, monto, mes, descripcion);
         siguienteId++;
         transacciones.agregar(transaccion);
         transaccionesEnlazadas.agregarAlFinal(transaccion);
         abbPorId.insertar(transaccion);
-        avlPorMonto.insertar(transaccion);
         matrizMensual.agregar(mes - 1, tipo.equals(Transaccion.TIPO_INGRESO) ? 0 : 1, monto);
         historialAcciones.apilar("Se registro: " + transaccion);
-        pilaAuditoria.apilar("ALTA #" + transaccion.obtenerId());
-        notificaciones.encolar("Nuevo movimiento registrado: #" + transaccion.obtenerId());
     }
 
     public void agregarCategoria(String nombre, double limite) {
@@ -68,9 +50,10 @@ public class GestorFinanzas {
     }
 
     public void encolarGastoPendiente(String categoria, double monto, int mes, String descripcion) {
+        validarMovimiento(Transaccion.TIPO_GASTO, monto, mes);
         Transaccion pendiente = new Transaccion(0, Transaccion.TIPO_GASTO, categoria, monto, mes, descripcion);
         pagosPendientes.encolar(pendiente);
-        tareasPrioritarias.encolar(new TareaPrioridad("Pagar " + descripcion + " por S/ " + monto, monto > 200 ? 3 : 1));
+        historialAcciones.apilar("Se registro pago pendiente: " + descripcion);
     }
 
     public void procesarGastoPendiente() {
@@ -89,11 +72,9 @@ public class GestorFinanzas {
                 transacciones.eliminarEn(i);
                 transaccionesEnlazadas.eliminar(actual);
                 abbPorId.eliminar(id);
-                avlPorMonto.eliminar(actual);
                 matrizMensual.agregar(actual.obtenerMes() - 1, actual.obtenerTipo().equals(Transaccion.TIPO_INGRESO) ? 0 : 1,
                         -actual.obtenerMonto());
                 historialAcciones.apilar("Se elimino movimiento #" + id);
-                pilaAuditoria.apilar("BAJA #" + id);
                 return true;
             }
         }
@@ -142,23 +123,6 @@ public class GestorFinanzas {
         matrizMensual.imprimir();
     }
 
-    public void mostrarDemoConceptosMatriz() {
-        MatrizDispersa matriz = new MatrizDispersa(3, 3);
-        matriz.agregar(0, 0, 100);
-        matriz.agregar(1, 0, 40);
-        matriz.agregar(1, 1, 80);
-        matriz.agregar(2, 1, 30);
-        matriz.agregar(2, 2, 60);
-        System.out.println("Matriz cuadrada de ejemplo:");
-        matriz.imprimir();
-        System.out.println("Triangular inferior: " + matriz.esTriangularInferior());
-        System.out.println("Triangular superior: " + matriz.esTriangularSuperior());
-        System.out.println("Tridiagonal: " + matriz.esTridiagonal());
-        System.out.println("Simetrica: " + matriz.esSimetrica());
-        System.out.println("Transpuesta:");
-        matriz.transpuesta().imprimir();
-    }
-
     public void mostrarRecorridosArboles() {
         System.out.println("ABB por ID - inorden:");
         abbPorId.inorden();
@@ -166,8 +130,6 @@ public class GestorFinanzas {
         abbPorId.preorden();
         System.out.println("ABB por ID - postorden:");
         abbPorId.postorden();
-        System.out.println("AVL por monto - inorden:");
-        avlPorMonto.inorden();
     }
 
     public void mostrarDemoOperacionesArreglo() {
@@ -179,23 +141,21 @@ public class GestorFinanzas {
         System.out.println("Comparacion por size original/copia: " + transacciones.mismoTamanio(copiar));
     }
 
-    public void mostrarSiguienteConsejo() {
-        System.out.println(consejos.obtenerPorTurno(transacciones.size()));
-    }
-
-    public void mostrarSiguienteNotificacion() {
-        String mensaje = notificaciones.desencolar();
-        System.out.println(mensaje == null ? "No hay notificaciones." : mensaje);
-    }
-
-    public void mostrarTareaMasPrioritaria() {
-        TareaPrioridad tarea = tareasPrioritarias.desencolar();
-        System.out.println(tarea == null ? "No hay tareas prioritarias." : tarea);
-    }
-
     public void mostrarUltimaAccion() {
         String last = historialAcciones.desapilar();
         System.out.println(last == null ? "No hay acciones para mostrar." : "Ultima accion: " + last);
+    }
+
+    private void validarMovimiento(String tipo, double monto, int mes) {
+        if (!Transaccion.TIPO_INGRESO.equals(tipo) && !Transaccion.TIPO_GASTO.equals(tipo)) {
+            throw new IllegalArgumentException("Tipo de movimiento no valido.");
+        }
+        if (monto <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero.");
+        }
+        if (mes < 1 || mes > 12) {
+            throw new IllegalArgumentException("El mes debe estar entre 1 y 12.");
+        }
     }
 
     private void cargarDatosIniciales() {
@@ -203,9 +163,6 @@ public class GestorFinanzas {
         agregarCategoria("Comida", 600);
         agregarCategoria("Transporte", 250);
         agregarCategoria("Servicios", 350);
-        consejos.agregar("Consejo: separa al menos 10% de tus ingresos para ahorro.");
-        consejos.agregar("Consejo: revisa gastos hormiga antes de fin de mes.");
-        consejos.agregar("Consejo: paga primero las deudas con mayor interes.");
         registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 1, "Pago mensual");
         registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 230, 1, "Supermercado");
         registrarMovimiento(Transaccion.TIPO_GASTO, "Transporte", 80, 1, "Recarga tarjeta");
