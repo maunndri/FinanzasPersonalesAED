@@ -40,6 +40,10 @@ public class Transaccion implements Comparable<Transaccion> {
         return mes;
     }
 
+    public String obtenerDescripcion() {
+        return descripcion;
+    }
+
     public int compareTo(Transaccion otra) {
         if (monto < otra.monto) {
             return -1;

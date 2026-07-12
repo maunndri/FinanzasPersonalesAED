@@ -1,8 +1,24 @@
 import modelo.Transaccion;
 import servicio.GestorFinanzas;
+import view.LoginVentana;
+
+import javax.swing.SwingUtilities;
 
 public class Principal {
     public static void main(String[] args) {
+        if (args.length > 0 && "consola".equalsIgnoreCase(args[0])) {
+            ejecutarConsola();
+            return;
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new LoginVentana().setVisible(true);
+            }
+        });
+    }
+
+    private static void ejecutarConsola() {
         java.util.Scanner lector = new java.util.Scanner(System.in);
         GestorFinanzas gestor = new GestorFinanzas();
         int opcion;
@@ -84,6 +100,7 @@ public class Principal {
     private static void registrarMovimientoDesdeConsola(java.util.Scanner lector, GestorFinanzas gestor) {
         int opcionTipo = leerEntero(lector, "1 ingreso, 2 gasto: ");
         String tipo = opcionTipo == 1 ? Transaccion.TIPO_INGRESO : Transaccion.TIPO_GASTO;
+        mostrarCategoriasPorTipo(gestor, tipo);
         System.out.print("Categoria: ");
         String categoria = lector.nextLine();
         double monto = leerDecimal(lector, "Monto: ");
@@ -99,6 +116,7 @@ public class Principal {
     }
 
     private static void registrarPagoPendienteDesdeConsola(java.util.Scanner lector, GestorFinanzas gestor) {
+        mostrarCategoriasPorTipo(gestor, Transaccion.TIPO_GASTO);
         System.out.print("Categoria: ");
         String categoria = lector.nextLine();
         double monto = leerDecimal(lector, "Monto: ");
@@ -111,6 +129,11 @@ public class Principal {
         } catch (IllegalArgumentException error) {
             System.out.println(error.getMessage());
         }
+    }
+
+    private static void mostrarCategoriasPorTipo(GestorFinanzas gestor, String tipo) {
+        System.out.println("Categorias disponibles para " + tipo + ":");
+        gestor.recorrerCategoriasPorTipo(tipo, valor -> System.out.println("- " + valor.obtenerNombre()));
     }
 
     private static int leerEntero(java.util.Scanner lector, String mensaje) {

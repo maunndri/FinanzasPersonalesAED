@@ -34,7 +34,7 @@ public class GestorFinanzas {
     }
 
     public void registrarMovimiento(String tipo, String categoria, double monto, int mes, String descripcion) {
-        validarMovimiento(tipo, monto, mes);
+        validarMovimiento(tipo, categoria, monto, mes);
         Transaccion transaccion = new Transaccion(siguienteId, tipo, categoria, monto, mes, descripcion);
         siguienteId++;
         transacciones.agregar(transaccion);
@@ -45,12 +45,16 @@ public class GestorFinanzas {
     }
 
     public void agregarCategoria(String nombre, double limite) {
-        categorias.agregarAlFinal(new Categoria(nombre, limite));
+        agregarCategoria(nombre, limite, Transaccion.TIPO_GASTO);
+    }
+
+    public void agregarCategoria(String nombre, double limite, String tipo) {
+        categorias.agregarAlFinal(new Categoria(nombre, limite, tipo));
         historialAcciones.apilar("Se agrego categoria: " + nombre);
     }
 
     public void encolarGastoPendiente(String categoria, double monto, int mes, String descripcion) {
-        validarMovimiento(Transaccion.TIPO_GASTO, monto, mes);
+        validarMovimiento(Transaccion.TIPO_GASTO, categoria, monto, mes);
         Transaccion pendiente = new Transaccion(0, Transaccion.TIPO_GASTO, categoria, monto, mes, descripcion);
         pagosPendientes.encolar(pendiente);
         historialAcciones.apilar("Se registro pago pendiente: " + descripcion);
@@ -83,6 +87,100 @@ public class GestorFinanzas {
 
     public Transaccion buscarPorId(int id) {
         return abbPorId.buscar(id);
+    }
+
+    public void recorrerMovimientos(Visitante<Transaccion> visitante) {
+        transacciones.recorrer(visitante);
+    }
+
+    public void recorrerMovimientosOrdenadosPorMonto(Visitante<Transaccion> visitante) {
+        transaccionesEnlazadas.ordenar();
+        transaccionesEnlazadas.recorrer(visitante);
+    }
+
+    public void recorrerCategoriasAdelante(Visitante<Categoria> visitante) {
+        categorias.recorrerAdelante(visitante);
+    }
+
+    public void recorrerCategoriasAtras(Visitante<Categoria> visitante) {
+        categorias.recorrerAtras(visitante);
+    }
+
+    public void recorrerCategoriasPorTipo(final String tipo, final Visitante<Categoria> visitante) {
+        categorias.recorrerAdelante(new Visitante<Categoria>() {
+            public void visitar(Categoria valor) {
+                if (valor.obtenerTipo().equals(tipo)) {
+                    visitante.visitar(valor);
+                }
+            }
+        });
+    }
+
+    public void recorrerArbolInorden(Visitante<Transaccion> visitante) {
+        abbPorId.recorrerInorden(visitante);
+    }
+
+    public void recorrerArbolPreorden(Visitante<Transaccion> visitante) {
+        abbPorId.recorrerPreorden(visitante);
+    }
+
+    public void recorrerArbolPostorden(Visitante<Transaccion> visitante) {
+        abbPorId.recorrerPostorden(visitante);
+    }
+
+    public double obtenerSaldoActual() {
+        double saldo = 0;
+        for (int i = 0; i < transacciones.size(); i++) {
+            Transaccion actual = transacciones.obtener(i);
+            if (Transaccion.TIPO_INGRESO.equals(actual.obtenerTipo())) {
+                saldo += actual.obtenerMonto();
+            } else {
+                saldo -= actual.obtenerMonto();
+            }
+        }
+        return saldo;
+    }
+
+    public double obtenerTotalIngresos() {
+        double total = 0;
+        for (int mes = 0; mes < 12; mes++) {
+            total += matrizMensual.obtener(mes, 0);
+        }
+        return total;
+    }
+
+    public double obtenerTotalGastos() {
+        double total = 0;
+        for (int mes = 0; mes < 12; mes++) {
+            total += matrizMensual.obtener(mes, 1);
+        }
+        return total;
+    }
+
+    public double obtenerMontoMensual(int mes, String tipo) {
+        if (mes < 1 || mes > 12) {
+            throw new IllegalArgumentException("El mes debe estar entre 1 y 12.");
+        }
+        int columna = Transaccion.TIPO_INGRESO.equals(tipo) ? 0 : 1;
+        return matrizMensual.obtener(mes - 1, columna);
+    }
+
+    public String obtenerResumenOperacionesArreglo() {
+        ListaArreglo<Transaccion> copiar = transacciones.copiar();
+        ListaArreglo<Transaccion> fusionado = transacciones.fusionar(copiar);
+        return "Cantidad original: " + transacciones.size()
+                + "\nCopia del arreglo: " + copiar.size()
+                + "\nFusion original + copia: " + fusionado.size()
+                + "\nComparacion por size original/copia: " + transacciones.mismoTamanio(copiar);
+    }
+
+    public String obtenerUltimaAccion() {
+        String last = historialAcciones.verCima();
+        return last == null ? "No hay acciones para mostrar." : "Ultima accion: " + last;
+    }
+
+    public boolean hayPagosPendientes() {
+        return !pagosPendientes.estaVacia();
     }
 
     public void listarMovimientosArreglo() {
@@ -146,9 +244,15 @@ public class GestorFinanzas {
         System.out.println(last == null ? "No hay acciones para mostrar." : "Ultima accion: " + last);
     }
 
-    private void validarMovimiento(String tipo, double monto, int mes) {
+    private void validarMovimiento(String tipo, String categoria, double monto, int mes) {
         if (!Transaccion.TIPO_INGRESO.equals(tipo) && !Transaccion.TIPO_GASTO.equals(tipo)) {
             throw new IllegalArgumentException("Tipo de movimiento no valido.");
+        }
+        if (categoria == null || categoria.trim().isEmpty()) {
+            throw new IllegalArgumentException("Debe seleccionar una categoria.");
+        }
+        if (!existeCategoriaParaTipo(categoria, tipo)) {
+            throw new IllegalArgumentException("La categoria '" + categoria + "' no corresponde a un " + tipo + ".");
         }
         if (monto <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero.");
@@ -158,11 +262,36 @@ public class GestorFinanzas {
         }
     }
 
+    private boolean existeCategoriaParaTipo(final String nombre, final String tipo) {
+        final boolean[] existe = new boolean[] { false };
+        categorias.recorrerAdelante(new Visitante<Categoria>() {
+            public void visitar(Categoria valor) {
+                if (valor.obtenerNombre().equalsIgnoreCase(nombre.trim()) && valor.obtenerTipo().equals(tipo)) {
+                    existe[0] = true;
+                }
+            }
+        });
+        return existe[0];
+    }
+
     private void cargarDatosIniciales() {
-        agregarCategoria("Sueldo", 0);
-        agregarCategoria("Comida", 600);
-        agregarCategoria("Transporte", 250);
-        agregarCategoria("Servicios", 350);
+        agregarCategoria("Sueldo", 0, Transaccion.TIPO_INGRESO);
+        agregarCategoria("Bonos", 0, Transaccion.TIPO_INGRESO);
+        agregarCategoria("Freelance", 0, Transaccion.TIPO_INGRESO);
+        agregarCategoria("Ventas", 0, Transaccion.TIPO_INGRESO);
+        agregarCategoria("Intereses", 0, Transaccion.TIPO_INGRESO);
+        agregarCategoria("Otros ingresos", 0, Transaccion.TIPO_INGRESO);
+
+        agregarCategoria("Comida", 600, Transaccion.TIPO_GASTO);
+        agregarCategoria("Transporte", 250, Transaccion.TIPO_GASTO);
+        agregarCategoria("Servicios", 350, Transaccion.TIPO_GASTO);
+        agregarCategoria("Vivienda", 900, Transaccion.TIPO_GASTO);
+        agregarCategoria("Salud", 300, Transaccion.TIPO_GASTO);
+        agregarCategoria("Educacion", 400, Transaccion.TIPO_GASTO);
+        agregarCategoria("Entretenimiento", 250, Transaccion.TIPO_GASTO);
+        agregarCategoria("Ropa", 250, Transaccion.TIPO_GASTO);
+        agregarCategoria("Deudas", 500, Transaccion.TIPO_GASTO);
+        agregarCategoria("Cuidado personal", 200, Transaccion.TIPO_GASTO);
         registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 1, "Pago mensual");
         registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 230, 1, "Supermercado");
         registrarMovimiento(Transaccion.TIPO_GASTO, "Transporte", 80, 1, "Recarga tarjeta");

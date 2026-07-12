@@ -38,12 +38,24 @@ public class ArbolBusquedaTransacciones {
         inorden(raiz);
     }
 
+    public void recorrerInorden(Visitante<Transaccion> visitante) {
+        recorrerInorden(raiz, visitante);
+    }
+
     public void preorden() {
         preorden(raiz);
     }
 
+    public void recorrerPreorden(Visitante<Transaccion> visitante) {
+        recorrerPreorden(raiz, visitante);
+    }
+
     public void postorden() {
         postorden(raiz);
+    }
+
+    public void recorrerPostorden(Visitante<Transaccion> visitante) {
+        recorrerPostorden(raiz, visitante);
     }
 
     private Nodo insertar(Nodo node, Transaccion transaccion) {
@@ -95,6 +107,14 @@ public class ArbolBusquedaTransacciones {
         }
     }
 
+    private void recorrerInorden(Nodo node, Visitante<Transaccion> visitante) {
+        if (node != null) {
+            recorrerInorden(node.izquierda, visitante);
+            visitante.visitar(node.valor);
+            recorrerInorden(node.derecha, visitante);
+        }
+    }
+
     private void preorden(Nodo node) {
         if (node != null) {
             System.out.println(node.valor);
@@ -103,11 +123,27 @@ public class ArbolBusquedaTransacciones {
         }
     }
 
+    private void recorrerPreorden(Nodo node, Visitante<Transaccion> visitante) {
+        if (node != null) {
+            visitante.visitar(node.valor);
+            recorrerPreorden(node.izquierda, visitante);
+            recorrerPreorden(node.derecha, visitante);
+        }
+    }
+
     private void postorden(Nodo node) {
         if (node != null) {
             postorden(node.izquierda);
             postorden(node.derecha);
             System.out.println(node.valor);
+        }
+    }
+
+    private void recorrerPostorden(Nodo node, Visitante<Transaccion> visitante) {
+        if (node != null) {
+            recorrerPostorden(node.izquierda, visitante);
+            recorrerPostorden(node.derecha, visitante);
+            visitante.visitar(node.valor);
         }
     }
 }
