@@ -363,12 +363,16 @@ public class VentanaFinanzas extends JFrame {
                 return false;
             }
         };
-        gestor.recorrerCategoriasPorTipo(tipo, valor -> modelo.addRow(new Object[] {
-                valor.obtenerNombre(),
-                "S/ " + MONEDA.format(valor.obtenerLimiteMensual())
-        }));
+        gestor.recorrerCategoriasPorTipo(tipo, categoria -> agregarCategoriaATabla(modelo, categoria));
         panel.add(new JScrollPane(crearTabla(modelo)), BorderLayout.CENTER);
         return panel;
+    }
+
+    private void agregarCategoriaATabla(DefaultTableModel modelo, Categoria categoria) {
+        modelo.addRow(new Object[] {
+                categoria.obtenerNombre(),
+                "S/ " + MONEDA.format(categoria.obtenerLimiteMensual())
+        });
     }
 
     private void mostrarEstadisticas() {
@@ -494,8 +498,12 @@ public class VentanaFinanzas extends JFrame {
 
     private DefaultComboBoxModel<String> crearModeloCategorias(String tipo) {
         DefaultComboBoxModel<String> modelo = new DefaultComboBoxModel<String>();
-        gestor.recorrerCategoriasPorTipo(tipo, valor -> modelo.addElement(valor.obtenerNombre()));
+        gestor.recorrerCategoriasPorTipo(tipo, categoria -> agregarCategoriaACombo(modelo, categoria));
         return modelo;
+    }
+
+    private void agregarCategoriaACombo(DefaultComboBoxModel<String> modelo, Categoria categoria) {
+        modelo.addElement(categoria.obtenerNombre());
     }
 
     private String obtenerNombreMes(int mes) {
