@@ -20,6 +20,7 @@ public class GestorFinanzas {
     private MatrizDispersa matrizMensual;
     private ArbolBusquedaTransacciones abbPorId;
     private int siguienteId;
+    private Transaccion ultimoMovimiento;
 
     public GestorFinanzas() {
         transacciones = new ListaArreglo<Transaccion>();
@@ -42,6 +43,7 @@ public class GestorFinanzas {
         abbPorId.insertar(transaccion);
         matrizMensual.agregar(mes - 1, tipo.equals(Transaccion.TIPO_INGRESO) ? 0 : 1, monto);
         historialAcciones.apilar("Se registro: " + transaccion);
+        ultimoMovimiento = transaccion;
     }
 
     public void agregarCategoria(String nombre, double limite) {
@@ -79,6 +81,9 @@ public class GestorFinanzas {
                 matrizMensual.agregar(actual.obtenerMes() - 1, actual.obtenerTipo().equals(Transaccion.TIPO_INGRESO) ? 0 : 1,
                         -actual.obtenerMonto());
                 historialAcciones.apilar("Se elimino movimiento #" + id);
+                if (ultimoMovimiento != null && ultimoMovimiento.obtenerId() == id) {
+                    ultimoMovimiento = null;
+                }
                 return true;
             }
         }
@@ -89,9 +94,68 @@ public class GestorFinanzas {
         return abbPorId.buscar(id);
     }
 
-    public void recorrerMovimientos(Visitante<Transaccion> visitante) {
-        transacciones.recorrer(visitante);
+    public boolean hayUltimoMovimiento() {
+        return ultimoMovimiento != null;
     }
+
+    public String obtenerDescripcionUltimoMovimiento() {
+        return ultimoMovimiento == null ? "No hay movimientos registrados." : ultimoMovimiento.toString();
+    }
+
+    public String eliminarUltimoMovimiento() {
+        if (ultimoMovimiento == null) {
+            return null;
+        }
+        String descripcion = ultimoMovimiento.toString();
+        int id = ultimoMovimiento.obtenerId();
+        historialAcciones.desapilar();
+        eliminarMovimientoPorId(id);
+        return descripcion;
+    }
+
+    public Categoria buscarCategoria(final String nombre, final String tipo) {
+    final Categoria[] encontrada = new Categoria[1];
+    categorias.recorrerAdelante(new Visitante<Categoria>() {
+        public void visitar(Categoria valor) {
+            if (encontrada[0] == null && valor.obtenerNombre().equalsIgnoreCase(nombre)
+                    && valor.obtenerTipo().equals(tipo)) {
+                encontrada[0] = valor;
+            }
+        }
+        });
+        return encontrada[0];
+    }
+
+    public double obtenerGastoPorCategoriaYMes(final String categoria, final int mes) {
+    final double[] total = new double[] { 0 };
+    transacciones.recorrer(new Visitante<Transaccion>() {
+        public void visitar(Transaccion valor) {
+            if (valor.obtenerMes() == mes
+                    && Transaccion.TIPO_GASTO.equals(valor.obtenerTipo())
+                    && valor.obtenerCategoria().equalsIgnoreCase(categoria)) {
+                total[0] += valor.obtenerMonto();
+            }
+        }
+        });
+        return total[0];
+    }
+
+    public boolean tieneLimiteDefinido(String categoria) {
+    Categoria cat = buscarCategoria(categoria, Transaccion.TIPO_GASTO);
+    return cat != null && cat.obtenerLimiteMensual() > 0;
+    }
+
+    public boolean superaLimiteMensual(String categoria, int mes) {
+        Categoria cat = buscarCategoria(categoria, Transaccion.TIPO_GASTO);
+        if (cat == null || cat.obtenerLimiteMensual() <= 0) {
+            return false;
+        }
+        return obtenerGastoPorCategoriaYMes(categoria, mes) > cat.obtenerLimiteMensual();
+    }
+
+    public void recorrerMovimientos(Visitante<Transaccion> visitante) {
+            transacciones.recorrer(visitante);
+        }
 
     public void recorrerMovimientosOrdenadosPorMonto(Visitante<Transaccion> visitante) {
         transaccionesEnlazadas.ordenar();

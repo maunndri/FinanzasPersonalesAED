@@ -9,6 +9,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.text.DecimalFormat;
+import java.util.Calendar;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -27,6 +28,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import model.Categoria;
@@ -153,7 +155,7 @@ public class VentanaFinanzas extends JFrame {
         });
         agregarBoton(panel, "Ultima accion", 10, new Runnable() {
             public void run() {
-                mostrarTextoEnVentana("Ultima accion", gestor.obtenerUltimaAccion());
+                mostrarUltimaAccion();
             }
         });
         agregarBoton(panel, "Demo arreglo", 11, new Runnable() {
@@ -268,10 +270,22 @@ public class VentanaFinanzas extends JFrame {
             return;
         }
         try {
-            gestor.registrarMovimiento(tipo, formulario.obtenerCategoria(), formulario.obtenerMonto(),
-                    formulario.obtenerMes(), formulario.obtenerDescripcion());
+            String categoria = formulario.obtenerCategoria();
+            int mes = formulario.obtenerMes();
+            gestor.registrarMovimiento(tipo, categoria, formulario.obtenerMonto(),
+                    mes, formulario.obtenerDescripcion());
             actualizarVista();
-            JOptionPane.showMessageDialog(this, "Movimiento registrado correctamente.");
+            if (Transaccion.TIPO_GASTO.equals(tipo) && gestor.superaLimiteMensual(categoria, mes)) {
+                double gastado = gestor.obtenerGastoPorCategoriaYMes(categoria, mes);
+                double limite = gestor.buscarCategoria(categoria, Transaccion.TIPO_GASTO).obtenerLimiteMensual();
+                JOptionPane.showMessageDialog(this,
+                        "Movimiento registrado.\n\nAtencion: la categoria '" + categoria + "' en "
+                                + obtenerNombreMes(mes) + " lleva S/ " + MONEDA.format(gastado)
+                                + " y supero su limite mensual de S/ " + MONEDA.format(limite) + ".",
+                        "Limite superado", JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Movimiento registrado correctamente.");
+            }
         } catch (IllegalArgumentException error) {
             mostrarError(error.getMessage());
         }
@@ -300,6 +314,53 @@ public class VentanaFinanzas extends JFrame {
         gestor.procesarGastoPendiente();
         actualizarVista();
         JOptionPane.showMessageDialog(this, "Se proceso el siguiente pago pendiente de la cola.");
+    }
+
+    private void mostrarUltimaAccion() {
+        final JDialog dialogo = crearDialogo("Ultima accion", 700, 260);
+        JPanel panel = new JPanel(new BorderLayout(0, 12));
+        panel.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
+        dialogo.setContentPane(panel);
+
+        final DefaultTableModel modelo = new DefaultTableModel(new Object[] { "Ultimo movimiento registrado" }, 0) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        cargarUltimoMovimiento(modelo);
+        JTable tabla = crearTabla(modelo);
+        panel.add(new JScrollPane(tabla), BorderLayout.CENTER);
+
+        JButton eliminar = new JButton("Eliminar ultimo movimiento");
+        eliminar.addActionListener(e -> {
+            if (!gestor.hayUltimoMovimiento()) {
+                mostrarError("No hay movimientos para eliminar.");
+                return;
+            }
+            int respuesta = JOptionPane.showConfirmDialog(dialogo,
+                    "Desea eliminar el ultimo movimiento registrado?",
+                    "Eliminar ultimo movimiento", JOptionPane.YES_NO_OPTION);
+            if (respuesta != JOptionPane.YES_OPTION) {
+                return;
+            }
+            String eliminado = gestor.eliminarUltimoMovimiento();
+            cargarUltimoMovimiento(modelo);
+            actualizarVista();
+            if (eliminado != null) {
+                JOptionPane.showMessageDialog(dialogo, "Se elimino: " + eliminado);
+            }
+        });
+
+        JPanel acciones = new JPanel(new BorderLayout());
+        acciones.add(eliminar, BorderLayout.WEST);
+        panel.add(acciones, BorderLayout.SOUTH);
+
+        dialogo.setVisible(true);
+    }
+
+    private void cargarUltimoMovimiento(DefaultTableModel modelo) {
+        modelo.setRowCount(0);
+        modelo.addRow(new Object[] { gestor.obtenerDescripcionUltimoMovimiento() });
     }
 
     private void mostrarHistorialMovimientos() {
@@ -354,25 +415,69 @@ public class VentanaFinanzas extends JFrame {
     }
 
     private JPanel crearPanelCategorias(String titulo, String tipo) {
-        JPanel panel = new JPanel(new BorderLayout(0, 8));
-        JLabel etiqueta = new JLabel(titulo);
-        etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        panel.add(etiqueta, BorderLayout.NORTH);
+    JPanel panel = new JPanel(new BorderLayout(0, 8));
+    JLabel etiqueta = new JLabel(titulo);
+    etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 16));
+    panel.add(etiqueta, BorderLayout.NORTH);
 
-        DefaultTableModel modelo = new DefaultTableModel(new Object[] { "Categoria", "Limite mensual" }, 0) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
+    final boolean esGasto = Transaccion.TIPO_GASTO.equals(tipo);
+    final int mesActual = Calendar.getInstance().get(Calendar.MONTH) + 1;
+
+    Object[] columnas = esGasto
+            ? new Object[] { "Categoria", "Limite mensual", "Gastado (" + obtenerNombreMes(mesActual) + ")", "Estado" }
+            : new Object[] { "Categoria", "Limite mensual" };
+
+    final DefaultTableModel modelo = new DefaultTableModel(columnas, 0) {
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+    gestor.recorrerCategoriasPorTipo(tipo, categoria -> agregarCategoriaATabla(modelo, categoria, esGasto, mesActual));
+
+    JTable tabla = crearTabla(modelo);
+    if (esGasto) {
+        tabla.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            public java.awt.Component getTableCellRendererComponent(JTable tabla, Object valor,
+                    boolean seleccionado, boolean foco, int fila, int columna) {
+                java.awt.Component componente = super.getTableCellRendererComponent(tabla, valor, seleccionado,
+                        foco, fila, columna);
+                Object estado = tabla.getModel().getValueAt(fila, tabla.getColumnCount() - 1);
+                boolean excedido = "Excedido".equals(estado);
+                if (!seleccionado) {
+                    componente.setBackground(excedido ? new Color(252, 220, 220) : Color.WHITE);
+                    setForeground(excedido ? new Color(160, 30, 30) : Color.BLACK);
+                }
+                return componente;
             }
-        };
-        gestor.recorrerCategoriasPorTipo(tipo, categoria -> agregarCategoriaATabla(modelo, categoria));
-        panel.add(new JScrollPane(crearTabla(modelo)), BorderLayout.CENTER);
-        return panel;
+        });
+    }
+    panel.add(new JScrollPane(tabla), BorderLayout.CENTER);
+    return panel;
     }
 
-    private void agregarCategoriaATabla(DefaultTableModel modelo, Categoria categoria) {
+    private void agregarCategoriaATabla(DefaultTableModel modelo, Categoria categoria, boolean esGasto, int mesActual) {
+        if (!esGasto) {
+            modelo.addRow(new Object[] {
+                    categoria.obtenerNombre(),
+                    "S/ " + MONEDA.format(categoria.obtenerLimiteMensual())
+            });
+            return;
+        }
+        double limite = categoria.obtenerLimiteMensual();
+        double gastado = gestor.obtenerGastoPorCategoriaYMes(categoria.obtenerNombre(), mesActual);
+        String estado;
+        if (limite <= 0) {
+            estado = "Sin limite";
+        } else if (gastado > limite) {
+            estado = "Excedido";
+        } else {
+            estado = "OK";
+        }
         modelo.addRow(new Object[] {
                 categoria.obtenerNombre(),
-                "S/ " + MONEDA.format(categoria.obtenerLimiteMensual())
+                "S/ " + MONEDA.format(limite),
+                "S/ " + MONEDA.format(gastado),
+                estado
         });
     }
 
