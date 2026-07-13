@@ -28,8 +28,9 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
-import modelo.Categoria;
-import modelo.Transaccion;
+
+import model.Categoria;
+import model.Transaccion;
 import servicio.GestorFinanzas;
 
 public class VentanaFinanzas extends JFrame {

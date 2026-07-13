@@ -1,6 +1,6 @@
 package estructuras;
 
-import modelo.Transaccion;
+import model.Transaccion;
 
 public class ArbolBusquedaTransacciones {
     private class Nodo {

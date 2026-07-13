@@ -6,10 +6,10 @@ import estructuras.ListaEnlazada;
 import estructuras.ColaEnlazada;
 import estructuras.PilaEnlazada;
 import estructuras.Visitante;
+import model.Categoria;
+import model.Transaccion;
 import estructuras.MatrizDispersa;
 import estructuras.ArbolBusquedaTransacciones;
-import modelo.Categoria;
-import modelo.Transaccion;
 
 public class GestorFinanzas {
     private ListaArreglo<Transaccion> transacciones;

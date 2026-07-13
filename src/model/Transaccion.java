@@ -1,4 +1,4 @@
-package modelo;
+package model;
 
 public class Transaccion implements Comparable<Transaccion> {
     public static final String TIPO_INGRESO = "INGRESO";

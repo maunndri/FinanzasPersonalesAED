@@ -1,6 +1,6 @@
 package estructuras;
 
-import modelo.TareaPrioridad;
+import model.TareaPrioridad;
 
 public class ColaPrioridad implements InterfazCola<TareaPrioridad> {
     private ListaArreglo<TareaPrioridad> tareas;

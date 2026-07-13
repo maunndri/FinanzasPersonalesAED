@@ -1,8 +1,9 @@
-import modelo.Transaccion;
 import servicio.GestorFinanzas;
 import view.LoginVentana;
 
 import javax.swing.SwingUtilities;
+
+import model.Transaccion;
 
 public class Principal {
     public static void main(String[] args) {
