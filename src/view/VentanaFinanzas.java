@@ -148,30 +148,20 @@ public class VentanaFinanzas extends JFrame {
                 mostrarOrdenadosPorMonto();
             }
         });
-        agregarBoton(panel, "Recorridos ABB", 9, new Runnable() {
-            public void run() {
-                mostrarRecorridosArbol();
-            }
-        });
-        agregarBoton(panel, "Ultima accion", 10, new Runnable() {
+        agregarBoton(panel, "Ultima accion", 9, new Runnable() {
             public void run() {
                 mostrarUltimaAccion();
-            }
-        });
-        agregarBoton(panel, "Demo arreglo", 11, new Runnable() {
-            public void run() {
-                mostrarTextoEnVentana("Demo arreglo", gestor.obtenerResumenOperacionesArreglo());
             }
         });
 
         JButton transferencia = new JButton("Transferencia");
         transferencia.setEnabled(false);
         transferencia.setToolTipText("El proyecto actual no implementa transferencias.");
-        panel.add(transferencia, restriccionesBoton(12));
+        panel.add(transferencia, restriccionesBoton(10));
 
         GridBagConstraints relleno = new GridBagConstraints();
         relleno.gridx = 0;
-        relleno.gridy = 13;
+        relleno.gridy = 11;
         relleno.weighty = 1;
         panel.add(new JPanel(), relleno);
         return panel;
@@ -525,16 +515,6 @@ public class VentanaFinanzas extends JFrame {
         cargarMovimientos(modelo, true);
         dialogo.setContentPane(new JScrollPane(crearTabla(modelo)));
         dialogo.setVisible(true);
-    }
-
-    private void mostrarRecorridosArbol() {
-        StringBuilder texto = new StringBuilder("ABB por ID - inorden:\n");
-        gestor.recorrerArbolInorden(valor -> texto.append(valor).append('\n'));
-        texto.append("\nABB por ID - preorden:\n");
-        gestor.recorrerArbolPreorden(valor -> texto.append(valor).append('\n'));
-        texto.append("\nABB por ID - postorden:\n");
-        gestor.recorrerArbolPostorden(valor -> texto.append(valor).append('\n'));
-        mostrarTextoEnVentana("Recorridos ABB", texto.toString());
     }
 
     private void mostrarTextoEnVentana(String titulo, String texto) {
