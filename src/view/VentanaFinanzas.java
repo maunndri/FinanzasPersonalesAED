@@ -20,12 +20,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -704,7 +702,7 @@ public class VentanaFinanzas extends JFrame {
         int obtenerMes() {
             return mes.getSelectedIndex() + 1;
         }
-        
+
         String obtenerDescripcion() {
             return descripcion.getText().trim();
         }
