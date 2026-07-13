@@ -28,7 +28,6 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-
 import model.Categoria;
 import model.Transaccion;
 import servicio.GestorFinanzas;
