@@ -503,7 +503,25 @@ public class VentanaFinanzas extends JFrame {
             return;
         }
         Transaccion encontrado = gestor.buscarPorId(id);
-        mostrarTextoEnVentana("Resultado de busqueda", encontrado == null ? "No encontrado." : encontrado.toString());
+
+        JDialog dialogo = crearDialogo("Resultado de busqueda", 700, 220);
+        JPanel panel = new JPanel(new BorderLayout(0, 12));
+        panel.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
+        dialogo.setContentPane(panel);
+
+        DefaultTableModel modelo = crearModeloMovimientos();
+        if (encontrado != null) {
+            agregarMovimiento(modelo, encontrado);
+        }
+        panel.add(new JScrollPane(crearTabla(modelo)), BorderLayout.CENTER);
+
+        if (encontrado == null) {
+            JLabel aviso = new JLabel("No se encontro ningun movimiento con ID " + id + ".");
+            aviso.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            panel.add(aviso, BorderLayout.NORTH);
+        }
+
+        dialogo.setVisible(true);
     }
 
     private void mostrarOrdenadosPorMonto() {
