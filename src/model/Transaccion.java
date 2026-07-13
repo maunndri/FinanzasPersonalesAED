@@ -4,6 +4,11 @@ public class Transaccion implements Comparable<Transaccion> {
     public static final String TIPO_INGRESO = "INGRESO";
     public static final String TIPO_GASTO = "GASTO";
 
+    private static final String[] NOMBRES_MES = {
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    };
+
     private int id;
     private String tipo;
     private String categoria;
@@ -56,7 +61,7 @@ public class Transaccion implements Comparable<Transaccion> {
 
     public String toString() {
         return "#" + id + " | " + tipo + " | " + categoria + " | S/ " + String.format("%.2f", monto)
-                + " | mes " + mes + " | " + descripcion;
+                + " | " + NOMBRES_MES[mes - 1] + " | " + descripcion;
     }
 }
 

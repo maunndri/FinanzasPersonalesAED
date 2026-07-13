@@ -619,7 +619,7 @@ public class VentanaFinanzas extends JFrame {
     private class FormularioMovimiento extends JDialog {
         private JComboBox<String> categoria;
         private JTextField monto;
-        private JSpinner mes;
+        private JComboBox<String> mes;
         private JTextField descripcion;
         private boolean aceptado;
 
@@ -639,7 +639,8 @@ public class VentanaFinanzas extends JFrame {
             categoria = new JComboBox<String>(crearModeloCategorias(tipo));
             categoria.setEditable(false);
             monto = new JTextField(14);
-            mes = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
+            mes = new JComboBox<String>(MESES);
+            mes.setSelectedIndex(Calendar.getInstance().get(Calendar.MONTH));
             descripcion = new JTextField(22);
 
             agregarCampo(panel, "Tipo:", new JLabel(tipo), 0);
@@ -701,9 +702,9 @@ public class VentanaFinanzas extends JFrame {
         }
 
         int obtenerMes() {
-            return ((Integer) mes.getValue()).intValue();
+            return mes.getSelectedIndex() + 1;
         }
-
+        
         String obtenerDescripcion() {
             return descripcion.getText().trim();
         }
