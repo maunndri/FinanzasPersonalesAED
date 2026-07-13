@@ -360,6 +360,40 @@ public class GestorFinanzas {
         registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 230, 1, "Supermercado");
         registrarMovimiento(Transaccion.TIPO_GASTO, "Transporte", 80, 1, "Recarga tarjeta");
         encolarGastoPendiente("Servicios", 210, 1, "Recibo de luz");
+
+        // Febrero
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 2, "Pago mensual");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 210, 2, "Supermercado");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Vivienda", 900, 2, "Alquiler");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Transporte", 75, 2, "Recarga tarjeta");
+
+        // Marzo
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 3, "Pago mensual");
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Bonos", 300, 3, "Bono trimestral");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 245, 3, "Supermercado");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Servicios", 180, 3, "Recibo de agua");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Entretenimiento", 90, 3, "Cine");
+
+        // Abril
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 4, "Pago mensual");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 220, 4, "Supermercado");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Vivienda", 900, 4, "Alquiler");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Salud", 150, 4, "Consulta medica");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Ropa", 130, 4, "Compras de temporada");
+
+        // Mayo
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 5, "Pago mensual");
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Freelance", 450, 5, "Proyecto externo");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 260, 5, "Supermercado");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Transporte", 90, 5, "Recarga tarjeta");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Deudas", 500, 5, "Cuota tarjeta de credito");
+
+        // Junio
+        registrarMovimiento(Transaccion.TIPO_INGRESO, "Sueldo", 1800, 6, "Pago mensual");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Comida", 230, 6, "Supermercado");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Vivienda", 900, 6, "Alquiler");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Servicios", 195, 6, "Recibo de luz");
+        registrarMovimiento(Transaccion.TIPO_GASTO, "Cuidado personal", 85, 6, "Peluqueria");
     }
 }
 
