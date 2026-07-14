@@ -5,6 +5,7 @@ public class Categoria {
     private double monthlyLimit;
     private String tipo;
 
+    // atajo: si no se especifica tipo, asume GASTO (el caso más común en cargarDatosIniciales)
     public Categoria(String nombre, double monthlyLimit) {
         this(nombre, monthlyLimit, "GASTO");
     }
@@ -31,4 +32,3 @@ public class Categoria {
         return nombre + " | " + tipo + " (limite mensual: S/ " + String.format("%.2f", monthlyLimit) + ")";
     }
 }
-

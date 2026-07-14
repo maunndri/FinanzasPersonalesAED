@@ -1,9 +1,11 @@
 package model;
 
 public class Transaccion implements Comparable<Transaccion> {
+    // constantes: un solo lugar de verdad para los strings de tipo, evita typos sueltos en el código
     public static final String TIPO_INGRESO = "INGRESO";
     public static final String TIPO_GASTO = "GASTO";
 
+    // usado por toString() para convertir el mes numérico (1-12) en texto
     private static final String[] NOMBRES_MES = {
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -49,6 +51,7 @@ public class Transaccion implements Comparable<Transaccion> {
         return descripcion;
     }
 
+    // compara por monto (usado por ListaEnlazada.ordenar() para el merge sort); si empatan, desempata por id
     public int compareTo(Transaccion otra) {
         if (monto < otra.monto) {
             return -1;
@@ -59,9 +62,9 @@ public class Transaccion implements Comparable<Transaccion> {
         return id - otra.id;
     }
 
+    // formato legible para consola/interfaz, ej: "#3 | GASTO | Comida | S/ 230.00 | Enero | Supermercado"
     public String toString() {
         return "#" + id + " | " + tipo + " | " + categoria + " | S/ " + String.format("%.2f", monto)
                 + " | " + NOMBRES_MES[mes - 1] + " | " + descripcion;
     }
 }
-

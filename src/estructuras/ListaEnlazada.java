@@ -14,6 +14,7 @@ public class ListaEnlazada<T extends Comparable<T>> {
     private Nodo cola;
     private int size;
 
+    // agrega al principio; siempre O(1), no importa cuántos elementos haya
     public void agregarAlInicio(T valor) {
         Nodo node = new Nodo(valor);
         node.siguiente = cabeza;
@@ -24,6 +25,7 @@ public class ListaEnlazada<T extends Comparable<T>> {
         size++;
     }
 
+    // agrega al final; O(1) gracias al puntero cola, si no habría que recorrer toda la lista primero
     public void agregarAlFinal(T valor) {
         Nodo node = new Nodo(valor);
         if (cola == null) {
@@ -35,6 +37,7 @@ public class ListaEnlazada<T extends Comparable<T>> {
         size++;
     }
 
+    // busca por valor (usa compareTo == 0) y desconecta el nodo; caso especial si es la cabeza
     public boolean eliminar(T valor) {
         if (cabeza == null) {
             return false;
@@ -62,6 +65,7 @@ public class ListaEnlazada<T extends Comparable<T>> {
         return false;
     }
 
+    // recorre desde la cabeza comparando uno por uno; O(n), no hay atajos posibles en una lista simple
     public T buscar(T valor) {
         Nodo actual = cabeza;
         while (actual != null) {
@@ -73,11 +77,14 @@ public class ListaEnlazada<T extends Comparable<T>> {
         return null;
     }
 
+    // punto de entrada del merge sort; al reordenar los nodos, el puntero cola queda desactualizado
+    // y hay que recalcularlo
     public void ordenar() {
         cabeza = ordenarPorMezcla(cabeza);
         actualizarCola();
     }
 
+    // patrón Visitor: recorre siguiendo los punteros .siguiente, sin exponer los nodos hacia afuera
     public void recorrer(Visitante<T> visitante) {
         Nodo actual = cabeza;
         while (actual != null) {
@@ -90,6 +97,8 @@ public class ListaEnlazada<T extends Comparable<T>> {
         return size;
     }
 
+    // merge sort recursivo: caso base (0 o 1 elemento, ya está ordenado), si no, parte a la mitad,
+    // ordena cada mitad por separado y fusiona los resultados
     private Nodo ordenarPorMezcla(Nodo inicio) {
         if (inicio == null || inicio.siguiente == null) {
             return inicio;
@@ -100,6 +109,8 @@ public class ListaEnlazada<T extends Comparable<T>> {
         return fusionarOrdenado(ordenarPorMezcla(inicio), ordenarPorMezcla(derecha));
     }
 
+    // truco "lento/rápido": rapido avanza el doble que lento, así cuando rapido llega al final,
+    // lento queda justo en la mitad, sin necesitar contar el tamaño antes
     private Nodo obtenerMitad(Nodo inicio) {
         Nodo lento = inicio;
         Nodo rapido = inicio.siguiente;
@@ -110,6 +121,8 @@ public class ListaEnlazada<T extends Comparable<T>> {
         return lento;
     }
 
+    // fusiona dos listas ya ordenadas en una sola: en cada paso compara las dos cabezas
+    // y "engancha" la más chica al resultado, avanzando solo en esa lista
     private Nodo fusionarOrdenado(Nodo izquierda, Nodo derecha) {
         Nodo resultado;
         if (izquierda.valor.compareTo(derecha.valor) <= 0) {
@@ -134,6 +147,8 @@ public class ListaEnlazada<T extends Comparable<T>> {
         return resultado;
     }
 
+    // después de ordenar, los nodos quedaron reconectados en otro orden, así que hay que
+    // volver a caminar hasta el final para saber cuál es el nuevo último nodo
     private void actualizarCola() {
         cola = cabeza;
         while (cola != null && cola.siguiente != null) {
@@ -141,4 +156,3 @@ public class ListaEnlazada<T extends Comparable<T>> {
         }
     }
 }
-

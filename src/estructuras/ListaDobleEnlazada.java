@@ -15,6 +15,7 @@ public class ListaDobleEnlazada<T> {
     private Nodo ultimo;
     private int size;
 
+    // agrega al final; conecta el nuevo nodo con .anterior también, no solo .siguiente como en la simple
     public void agregarAlFinal(T valor) {
         Nodo node = new Nodo(valor);
         if (ultimo == null) {
@@ -28,6 +29,7 @@ public class ListaDobleEnlazada<T> {
         size++;
     }
 
+    // busca por texto (usando toString) y desconecta el nodo delegando en unlink()
     public boolean eliminarPorTexto(String text) {
         Nodo actual = cabeza;
         while (actual != null) {
@@ -51,6 +53,7 @@ public class ListaDobleEnlazada<T> {
         return null;
     }
 
+    // patrón Visitor, de cabeza a último
     public void recorrerAdelante(Visitante<T> visitante) {
         Nodo actual = cabeza;
         while (actual != null) {
@@ -59,6 +62,7 @@ public class ListaDobleEnlazada<T> {
         }
     }
 
+    // igual que recorrerAdelante pero al revés, gracias al puntero .anterior que no existe en la lista simple
     public void recorrerAtras(Visitante<T> visitante) {
         Nodo actual = ultimo;
         while (actual != null) {
@@ -71,6 +75,8 @@ public class ListaDobleEnlazada<T> {
         return size;
     }
 
+    // desconecta un nodo del medio en O(1): reconecta a su anterior y siguiente directamente entre sí,
+    // sin tener que recorrer la lista para encontrarlos (ya los tenemos guardados en el propio nodo)
     private void unlink(Nodo node) {
         if (node.anterior == null) {
             cabeza = node.siguiente;
@@ -85,4 +91,3 @@ public class ListaDobleEnlazada<T> {
         size--;
     }
 }
-

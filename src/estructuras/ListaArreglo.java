@@ -13,12 +13,14 @@ public class ListaArreglo<T> {
         size = 0;
     }
 
+    // agrega al final; O(1) casi siempre, salvo cuando toca duplicar capacidad
     public void agregar(T valor) {
         asegurarCapacidad();
         datos[size] = valor;
         size++;
     }
 
+    // inserta en una posición específica; corre todo lo que está a la derecha un lugar para abrir espacio
     public void insertar(int indice, T valor) {
         validarIndiceInsercion(indice);
         asegurarCapacidad();
@@ -34,6 +36,7 @@ public class ListaArreglo<T> {
         datos[indice] = valor;
     }
 
+    // elimina en una posición; corre todo lo de la derecha un lugar hacia la izquierda para tapar el hueco
     public T eliminarEn(int indice) {
         validarIndice(indice);
         T eliminado = obtener(indice);
@@ -59,6 +62,7 @@ public class ListaArreglo<T> {
         return size == 0;
     }
 
+    // crea una lista nueva e independiente con los mismos elementos (no comparte el array interno)
     public ListaArreglo<T> copiar() {
         ListaArreglo<T> copia = new ListaArreglo<T>(datos.length);
         for (int i = 0; i < size; i++) {
@@ -67,6 +71,7 @@ public class ListaArreglo<T> {
         return copia;
     }
 
+    // junta esta lista + otra en una tercera lista nueva, sin modificar ninguna de las dos originales
     public ListaArreglo<T> fusionar(ListaArreglo<T> otra) {
         ListaArreglo<T> fusionado = new ListaArreglo<T>(size + otra.size());
         for (int i = 0; i < size; i++) {
@@ -82,12 +87,14 @@ public class ListaArreglo<T> {
         return size == otra.size();
     }
 
+    // patrón Visitor: la lista recorre su propio array y le entrega cada elemento a quien llamó
     public void recorrer(Visitante<T> visitante) {
         for (int i = 0; i < size; i++) {
             visitante.visitar(obtener(i));
         }
     }
 
+    // si el array interno ya está lleno, crea uno del doble de tamaño y copia todo ahí
     private void asegurarCapacidad() {
         if (size < datos.length) {
             return;
@@ -111,4 +118,3 @@ public class ListaArreglo<T> {
         }
     }
 }
-
