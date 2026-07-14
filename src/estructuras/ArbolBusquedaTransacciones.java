@@ -7,9 +7,11 @@ public class ArbolBusquedaTransacciones {
         Transaccion valor;
         Nodo izquierda;
         Nodo derecha;
+        int altura;
 
         Nodo(Transaccion valor) {
             this.valor = valor;
+            this.altura = 1;
         }
     }
 
@@ -67,7 +69,7 @@ public class ArbolBusquedaTransacciones {
         } else if (transaccion.obtenerId() > node.valor.obtenerId()) {
             node.derecha = insertar(node.derecha, transaccion);
         }
-        return node;
+        return equilibrar(node);
     }
 
     private Nodo eliminar(Nodo node, int id) {
@@ -89,7 +91,7 @@ public class ArbolBusquedaTransacciones {
             node.valor = sucesor.valor;
             node.derecha = eliminar(node.derecha, sucesor.valor.obtenerId());
         }
-        return node;
+        return equilibrar(node);
     }
 
     private Nodo minimo(Nodo node) {
@@ -97,6 +99,56 @@ public class ArbolBusquedaTransacciones {
             node = node.izquierda;
         }
         return node;
+    }
+
+    private Nodo equilibrar(Nodo node) {
+        actualizarAltura(node);
+        int balance = obtenerBalance(node);
+        if (balance > 1) {
+            if (obtenerBalance(node.izquierda) < 0) {
+                node.izquierda = rotarIzquierda(node.izquierda);
+            }
+            return rotarDerecha(node);
+        }
+        if (balance < -1) {
+            if (obtenerBalance(node.derecha) > 0) {
+                node.derecha = rotarDerecha(node.derecha);
+            }
+            return rotarIzquierda(node);
+        }
+        return node;
+    }
+
+    private Nodo rotarDerecha(Nodo node) {
+        Nodo nuevaRaiz = node.izquierda;
+        Nodo subarbol = nuevaRaiz.derecha;
+        nuevaRaiz.derecha = node;
+        node.izquierda = subarbol;
+        actualizarAltura(node);
+        actualizarAltura(nuevaRaiz);
+        return nuevaRaiz;
+    }
+
+    private Nodo rotarIzquierda(Nodo node) {
+        Nodo nuevaRaiz = node.derecha;
+        Nodo subarbol = nuevaRaiz.izquierda;
+        nuevaRaiz.izquierda = node;
+        node.derecha = subarbol;
+        actualizarAltura(node);
+        actualizarAltura(nuevaRaiz);
+        return nuevaRaiz;
+    }
+
+    private int obtenerAltura(Nodo node) {
+        return node == null ? 0 : node.altura;
+    }
+
+    private int obtenerBalance(Nodo node) {
+        return node == null ? 0 : obtenerAltura(node.izquierda) - obtenerAltura(node.derecha);
+    }
+
+    private void actualizarAltura(Nodo node) {
+        node.altura = 1 + Math.max(obtenerAltura(node.izquierda), obtenerAltura(node.derecha));
     }
 
     private void inorden(Nodo node) {
