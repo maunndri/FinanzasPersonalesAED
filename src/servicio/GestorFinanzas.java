@@ -22,6 +22,7 @@ public class GestorFinanzas {
     private int siguienteId;
     private Transaccion ultimoMovimiento;
 
+    // instancia las 7 estructuras (una por responsabilidad) y precarga 6 meses de datos de ejemplo
     public GestorFinanzas() {
         transacciones = new ListaArreglo<Transaccion>();
         transaccionesEnlazadas = new ListaEnlazada<Transaccion>();
@@ -34,6 +35,8 @@ public class GestorFinanzas {
         cargarDatosIniciales();
     }
 
+    // el corazón del sistema: valida, crea la transacción, y la reparte a las 5 estructuras que
+    // la necesitan (lista maestra, lista para ordenar, árbol por id, matriz de totales, pila de historial)
     public void registrarMovimiento(String tipo, String categoria, double monto, int mes, String descripcion) {
         validarMovimiento(tipo, categoria, monto, mes);
         Transaccion transaccion = new Transaccion(siguienteId, tipo, categoria, monto, mes, descripcion);
@@ -55,6 +58,8 @@ public class GestorFinanzas {
         historialAcciones.apilar("Se agrego categoria: " + nombre);
     }
 
+    // guarda un gasto "a futuro" en la cola; todavía no toca ninguna de las 5 estructuras de
+    // registrarMovimiento, porque el gasto aún no se ha pagado de verdad
     public void encolarGastoPendiente(String categoria, double monto, int mes, String descripcion) {
         validarMovimiento(Transaccion.TIPO_GASTO, categoria, monto, mes);
         Transaccion pendiente = new Transaccion(0, Transaccion.TIPO_GASTO, categoria, monto, mes, descripcion);
@@ -62,6 +67,7 @@ public class GestorFinanzas {
         historialAcciones.apilar("Se registro pago pendiente: " + descripcion);
     }
 
+    // saca el primero de la fila (FIFO) y recién ahí lo convierte en un movimiento real
     public void procesarGastoPendiente() {
         Transaccion pendiente = pagosPendientes.desencolar();
         if (pendiente == null) {
@@ -71,6 +77,9 @@ public class GestorFinanzas {
         registrarMovimiento(Transaccion.TIPO_GASTO, pendiente.obtenerCategoria(), pendiente.obtenerMonto(), pendiente.obtenerMes(), "Pago procesado");
     }
 
+    // recorre la lista maestra buscando el id; al encontrarlo, lo quita de las 3 estructuras donde
+    // vive (lista, lista enlazada, árbol) y resta su monto de la matriz mensual (el signo negativo
+    // "deshace" la suma que se hizo al registrarlo)
     public boolean eliminarMovimientoPorId(int id) {
         for (int i = 0; i < transacciones.size(); i++) {
             Transaccion actual = transacciones.obtener(i);
@@ -90,6 +99,7 @@ public class GestorFinanzas {
         return false;
     }
 
+    // delega directo en el AVL: búsqueda en O(log n) en vez de recorrer la lista entera
     public Transaccion buscarPorId(int id) {
         return abbPorId.buscar(id);
     }
@@ -102,6 +112,8 @@ public class GestorFinanzas {
         return ultimoMovimiento == null ? "No hay movimientos registrados." : ultimoMovimiento.toString();
     }
 
+    // deshace el último movimiento registrado: saca el post-it de la pila (el texto de ese registro)
+    // y llama a eliminarMovimientoPorId para sacarlo también de las demás estructuras
     public String eliminarUltimoMovimiento() {
         if (ultimoMovimiento == null) {
             return null;
@@ -113,6 +125,8 @@ public class GestorFinanzas {
         return descripcion;
     }
 
+    // patrón Visitor: recorre las categorías buscando nombre+tipo exacto. El array de 1 casilla
+    // (encontrada[0]) es el truco para poder "modificar" una variable desde dentro de la clase anónima
     public Categoria buscarCategoria(final String nombre, final String tipo) {
     final Categoria[] encontrada = new Categoria[1];
     categorias.recorrerAdelante(new Visitante<Categoria>() {
@@ -126,6 +140,8 @@ public class GestorFinanzas {
         return encontrada[0];
     }
 
+    // suma con Visitante todos los gastos que coincidan en categoría y mes; mismo truco del array
+    // de 1 casilla para acumular el total dentro de la clase anónima
     public double obtenerGastoPorCategoriaYMes(final String categoria, final int mes) {
     final double[] total = new double[] { 0 };
     transacciones.recorrer(new Visitante<Transaccion>() {
@@ -140,11 +156,13 @@ public class GestorFinanzas {
         return total[0];
     }
 
+    // un límite de 0 significa "sin límite definido" (así están cargadas todas las categorías de ingreso)
     public boolean tieneLimiteDefinido(String categoria) {
     Categoria cat = buscarCategoria(categoria, Transaccion.TIPO_GASTO);
     return cat != null && cat.obtenerLimiteMensual() > 0;
     }
 
+    // compara el gasto acumulado del mes contra el límite de la categoría; base del sistema de alertas
     public boolean superaLimiteMensual(String categoria, int mes) {
         Categoria cat = buscarCategoria(categoria, Transaccion.TIPO_GASTO);
         if (cat == null || cat.obtenerLimiteMensual() <= 0) {
@@ -153,10 +171,13 @@ public class GestorFinanzas {
         return obtenerGastoPorCategoriaYMes(categoria, mes) > cat.obtenerLimiteMensual();
     }
 
+    // los siguientes métodos recorrerXxx son puentes: reciben un Visitante de quien llama y lo
+    // delegan a la estructura correspondiente, sin que quien llama necesite conocer esa estructura
     public void recorrerMovimientos(Visitante<Transaccion> visitante) {
             transacciones.recorrer(visitante);
         }
 
+    // ordena por monto antes de recorrer (usa el merge sort de ListaEnlazada)
     public void recorrerMovimientosOrdenadosPorMonto(Visitante<Transaccion> visitante) {
         transaccionesEnlazadas.ordenar();
         transaccionesEnlazadas.recorrer(visitante);
@@ -170,6 +191,7 @@ public class GestorFinanzas {
         categorias.recorrerAtras(visitante);
     }
 
+    // filtra por tipo antes de pasarle cada categoría al Visitante original; un Visitante "envolviendo" a otro
     public void recorrerCategoriasPorTipo(final String tipo, final Visitante<Categoria> visitante) {
         categorias.recorrerAdelante(new Visitante<Categoria>() {
             public void visitar(Categoria valor) {
@@ -180,6 +202,8 @@ public class GestorFinanzas {
         });
     }
 
+    // los 3 recorrerArbolXxx delegan al AVL; recorrerArbolInorden es el más útil porque
+    // da las transacciones ordenadas por id sin necesitar ordenar nada
     public void recorrerArbolInorden(Visitante<Transaccion> visitante) {
         abbPorId.recorrerInorden(visitante);
     }
@@ -192,6 +216,7 @@ public class GestorFinanzas {
         abbPorId.recorrerPostorden(visitante);
     }
 
+    // recorre toda la lista maestra sumando ingresos y restando gastos; O(n), no usa la matriz
     public double obtenerSaldoActual() {
         double saldo = 0;
         for (int i = 0; i < transacciones.size(); i++) {
@@ -205,6 +230,8 @@ public class GestorFinanzas {
         return saldo;
     }
 
+    // suma la columna 0 (ingresos) de la matriz mensual, mes por mes; obtenerTotalGastos es
+    // exactamente igual pero con la columna 1 (gastos)
     public double obtenerTotalIngresos() {
         double total = 0;
         for (int mes = 0; mes < 12; mes++) {
@@ -221,6 +248,7 @@ public class GestorFinanzas {
         return total;
     }
 
+    // lee directo una celda de la matriz (un mes y un tipo específicos), sin sumar todos los meses
     public double obtenerMontoMensual(int mes, String tipo) {
         if (mes < 1 || mes > 12) {
             throw new IllegalArgumentException("El mes debe estar entre 1 y 12.");
@@ -229,6 +257,7 @@ public class GestorFinanzas {
         return matrizMensual.obtener(mes - 1, columna);
     }
 
+    // demuestra las operaciones "académicas" de ListaArreglo (copiar, fusionar, comparar tamaño) en texto
     public String obtenerResumenOperacionesArreglo() {
         ListaArreglo<Transaccion> copiar = transacciones.copiar();
         ListaArreglo<Transaccion> fusionado = transacciones.fusionar(copiar);
@@ -308,6 +337,8 @@ public class GestorFinanzas {
         System.out.println(last == null ? "No hay acciones para mostrar." : "Ultima accion: " + last);
     }
 
+    // se ejecuta antes de cualquier registro: si algo falla acá, se lanza la excepción y
+    // registrarMovimiento se corta sin llegar a tocar ninguna estructura
     private void validarMovimiento(String tipo, String categoria, double monto, int mes) {
         if (!Transaccion.TIPO_INGRESO.equals(tipo) && !Transaccion.TIPO_GASTO.equals(tipo)) {
             throw new IllegalArgumentException("Tipo de movimiento no valido.");
@@ -326,6 +357,8 @@ public class GestorFinanzas {
         }
     }
 
+    // evita, por ejemplo, registrar un ingreso con categoría de gasto: revisa que exista una
+    // categoría con ese nombre Y ese tipo exacto
     private boolean existeCategoriaParaTipo(final String nombre, final String tipo) {
         final boolean[] existe = new boolean[] { false };
         categorias.recorrerAdelante(new Visitante<Categoria>() {
@@ -338,6 +371,8 @@ public class GestorFinanzas {
         return existe[0];
     }
 
+    // precarga las categorías (6 de ingreso, 10 de gasto, cada una con su límite mensual) y
+    // 6 meses de movimientos de ejemplo, para que el sistema no arranque vacío
     private void cargarDatosIniciales() {
         agregarCategoria("Sueldo", 0, Transaccion.TIPO_INGRESO);
         agregarCategoria("Bonos", 0, Transaccion.TIPO_INGRESO);
@@ -396,4 +431,3 @@ public class GestorFinanzas {
         registrarMovimiento(Transaccion.TIPO_GASTO, "Cuidado personal", 85, 6, "Peluqueria");
     }
 }
-
