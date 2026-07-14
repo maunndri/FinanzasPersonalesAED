@@ -11,26 +11,27 @@ public class ListaEnlazada<T extends Comparable<T>> {
     }
 
     private Nodo cabeza;
+    private Nodo cola;
     private int size;
 
     public void agregarAlInicio(T valor) {
         Nodo node = new Nodo(valor);
         node.siguiente = cabeza;
         cabeza = node;
+        if (cola == null) {
+            cola = node;
+        }
         size++;
     }
 
     public void agregarAlFinal(T valor) {
         Nodo node = new Nodo(valor);
-        if (cabeza == null) {
+        if (cola == null) {
             cabeza = node;
         } else {
-            Nodo actual = cabeza;
-            while (actual.siguiente != null) {
-                actual = actual.siguiente;
-            }
-            actual.siguiente = node;
+            cola.siguiente = node;
         }
+        cola = node;
         size++;
     }
 
@@ -40,6 +41,9 @@ public class ListaEnlazada<T extends Comparable<T>> {
         }
         if (cabeza.valor.compareTo(valor) == 0) {
             cabeza = cabeza.siguiente;
+            if (cabeza == null) {
+                cola = null;
+            }
             size--;
             return true;
         }
@@ -47,6 +51,9 @@ public class ListaEnlazada<T extends Comparable<T>> {
         while (actual.siguiente != null) {
             if (actual.siguiente.valor.compareTo(valor) == 0) {
                 actual.siguiente = actual.siguiente.siguiente;
+                if (actual.siguiente == null) {
+                    cola = actual;
+                }
                 size--;
                 return true;
             }
@@ -67,23 +74,8 @@ public class ListaEnlazada<T extends Comparable<T>> {
     }
 
     public void ordenar() {
-        if (cabeza == null || cabeza.siguiente == null) {
-            return;
-        }
-        boolean swapped;
-        do {
-            swapped = false;
-            Nodo actual = cabeza;
-            while (actual.siguiente != null) {
-                if (actual.valor.compareTo(actual.siguiente.valor) > 0) {
-                    T temporal = actual.valor;
-                    actual.valor = actual.siguiente.valor;
-                    actual.siguiente.valor = temporal;
-                    swapped = true;
-                }
-                actual = actual.siguiente;
-            }
-        } while (swapped);
+        cabeza = ordenarPorMezcla(cabeza);
+        actualizarCola();
     }
 
     public void recorrer(Visitante<T> visitante) {
@@ -96,6 +88,57 @@ public class ListaEnlazada<T extends Comparable<T>> {
 
     public int size() {
         return size;
+    }
+
+    private Nodo ordenarPorMezcla(Nodo inicio) {
+        if (inicio == null || inicio.siguiente == null) {
+            return inicio;
+        }
+        Nodo mitad = obtenerMitad(inicio);
+        Nodo derecha = mitad.siguiente;
+        mitad.siguiente = null;
+        return fusionarOrdenado(ordenarPorMezcla(inicio), ordenarPorMezcla(derecha));
+    }
+
+    private Nodo obtenerMitad(Nodo inicio) {
+        Nodo lento = inicio;
+        Nodo rapido = inicio.siguiente;
+        while (rapido != null && rapido.siguiente != null) {
+            lento = lento.siguiente;
+            rapido = rapido.siguiente.siguiente;
+        }
+        return lento;
+    }
+
+    private Nodo fusionarOrdenado(Nodo izquierda, Nodo derecha) {
+        Nodo resultado;
+        if (izquierda.valor.compareTo(derecha.valor) <= 0) {
+            resultado = izquierda;
+            izquierda = izquierda.siguiente;
+        } else {
+            resultado = derecha;
+            derecha = derecha.siguiente;
+        }
+        Nodo actual = resultado;
+        while (izquierda != null && derecha != null) {
+            if (izquierda.valor.compareTo(derecha.valor) <= 0) {
+                actual.siguiente = izquierda;
+                izquierda = izquierda.siguiente;
+            } else {
+                actual.siguiente = derecha;
+                derecha = derecha.siguiente;
+            }
+            actual = actual.siguiente;
+        }
+        actual.siguiente = izquierda != null ? izquierda : derecha;
+        return resultado;
+    }
+
+    private void actualizarCola() {
+        cola = cabeza;
+        while (cola != null && cola.siguiente != null) {
+            cola = cola.siguiente;
+        }
     }
 }
 

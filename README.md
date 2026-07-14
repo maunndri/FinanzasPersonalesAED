@@ -32,7 +32,7 @@ run.bat
 Tambien se puede compilar y ejecutar manualmente:
 
 ```bat
-javac -d bin src\Principal.java src\view\*.java src\estructuras\*.java src\modelo\*.java src\servicio\*.java
+javac -d bin src\Principal.java src\view\*.java src\estructuras\*.java src\model\*.java src\servicio\*.java
 java -cp bin Principal
 ```
 
@@ -50,7 +50,7 @@ java -cp bin Principal consola
 
 - `src/Principal.java`: punto de inicio del programa. Abre la interfaz grafica o el modo consola.
 - `src/view`: contiene las ventanas Swing del sistema.
-- `src/modelo`: contiene las clases de datos del sistema financiero.
+- `src/model`: contiene las clases de datos del sistema financiero.
 - `src/servicio`: contiene la logica principal de negocio.
 - `src/estructuras`: contiene las estructuras de datos implementadas manualmente.
 
@@ -141,6 +141,8 @@ Uso en el sistema:
 
 - Guarda transacciones.
 - Permite ordenar movimientos por monto usando `compareTo`.
+- Conserva una referencia al ultimo nodo, por lo que agregar un movimiento nuevo al final no necesita recorrer toda la lista.
+- Ordena con **merge sort** sobre nodos, una estrategia eficiente aun cuando existan muchos movimientos.
 
 Relacion con el curso:
 
@@ -214,7 +216,7 @@ Es un arbol binario de busqueda ordenado por ID.
 
 Uso en el sistema:
 
-- Inserta cada movimiento registrado.
+- Inserta cada movimiento registrado y se balancea automaticamente (AVL).
 - Busca transacciones por ID.
 - Elimina transacciones del arbol.
 - Permite recorridos inorden, preorden y postorden.
@@ -225,6 +227,22 @@ Relacion con el curso:
 - Arbol binario de busqueda.
 - Recorridos de arboles.
 - Busqueda estructurada.
+
+## Escalabilidad: muchas transacciones
+
+El sistema no tiene un limite fijo de 10, 100 o 1,000 transacciones. La cola de pagos pendientes usa nodos enlazados y la lista principal es un arreglo dinamico: cuando se llena, duplica su capacidad. Por tanto, puede seguir almacenando movimientos mientras exista memoria disponible.
+
+Cada registro actualiza la lista, el arbol, la matriz mensual y el historial. Para evitar que el rendimiento se degrade al registrar identificadores consecutivos, el arbol por ID aplica balanceo AVL. Asi, insertar, buscar y eliminar por ID tienen un costo aproximado de **O(log n)**. La lista usada para ordenar por monto agrega en **O(1)** y aplica merge sort en **O(n log n)**.
+
+### Verificacion con 1,000 movimientos
+
+Se verifico el registro de 1,000 transacciones adicionales sobre los datos iniciales (1,027 movimientos en total). La prueba confirmo que se puede buscar la ultima transaccion y calcular el saldo sin errores. Para compilar y abrir el sistema use:
+
+```bat
+run.bat
+```
+
+En la interfaz, registre movimientos repetidamente con una categoria valida, por ejemplo `Sueldo` para ingresos o `Comida` para gastos. Cada movimiento recibe un ID distinto y queda disponible en el historial y en la busqueda por ID.
 
 ### 8. `Visitante`
 
