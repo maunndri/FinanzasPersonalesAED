@@ -1,5 +1,5 @@
 
-    import java.util.Random;
+import java.util.Random;
 
 import model.Transaccion;
 import servicio.GestorFinanzas;
