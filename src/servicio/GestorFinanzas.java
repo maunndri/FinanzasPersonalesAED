@@ -8,7 +8,7 @@ import estructuras.PilaEnlazada;
 import estructuras.Visitante;
 import model.Categoria;
 import model.Transaccion;
-import estructuras.MatrizDispersa;
+import estructuras.MatrizDensa;
 import estructuras.ArbolBusquedaTransacciones;
 
 public class GestorFinanzas {
@@ -17,7 +17,7 @@ public class GestorFinanzas {
     private ListaDobleEnlazada<Categoria> categorias;
     private PilaEnlazada<String> historialAcciones;
     private ColaEnlazada<Transaccion> pagosPendientes;
-    private MatrizDispersa matrizMensual;
+    private MatrizDensa matrizMensual;
     private ArbolBusquedaTransacciones abbPorId;
     private int siguienteId;
     private Transaccion ultimoMovimiento;
@@ -29,7 +29,7 @@ public class GestorFinanzas {
         categorias = new ListaDobleEnlazada<Categoria>();
         historialAcciones = new PilaEnlazada<String>();
         pagosPendientes = new ColaEnlazada<Transaccion>();
-        matrizMensual = new MatrizDispersa(12, 2);
+        matrizMensual = new MatrizDensa(12, 2);
         abbPorId = new ArbolBusquedaTransacciones();
         siguienteId = 1;
         cargarDatosIniciales();

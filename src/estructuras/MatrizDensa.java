@@ -1,9 +1,9 @@
 package estructuras;
 
-public class MatrizDispersa {
+public class MatrizDensa {
     private double[][] values;
 
-    public MatrizDispersa(int filas, int columnas) {
+    public MatrizDensa(int filas, int columnas) {
         values = new double[filas][columnas];
     }
 
@@ -17,8 +17,8 @@ public class MatrizDispersa {
     }
 
     // crea una matriz nueva con filas y columnas invertidas: la celda [i][j] pasa a ser [j][i]
-    public MatrizDispersa transpuesta() {
-        MatrizDispersa result = new MatrizDispersa(values[0].length, values.length);
+    public MatrizDensa transpuesta() {
+        MatrizDensa result = new MatrizDensa(values[0].length, values.length);
         for (int i = 0; i < values.length; i++) {
             for (int j = 0; j < values[i].length; j++) {
                 result.values[j][i] = values[i][j];
